@@ -32,7 +32,7 @@
 <body>
 
 <h1>単語の意味（日本語）</h1>
-<p>下の英文で、知りたい単語をマウスでドラッグして選択してください。日本語の意味が表示されます。</p>
+<p>下の英文で、知りたい単語をマウスでドラッグして選択してください。表示されるリンクから日本語の意味を確認できます。</p>
 
 <div id="content">
   <p>The quick brown fox jumps over the lazy dog. Scientists often collaborate to investigate complex phenomena in nature.</p>
@@ -44,51 +44,41 @@
 <script>
   const tooltip = document.getElementById('tooltip');
 
-  // 英語から日本語への翻訳（無料・APIキー不要の MyMemory を使用）
-  async function translateToJapanese(word) {
-    const url = 'https://api.mymemory.translated.net/get?q=' +
-                encodeURIComponent(word) + '&langpair=en|ja';
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('翻訳に失敗しました');
-    const data = await res.json();
-    return data.responseData.translatedText;
+  // 選択した単語を、Google翻訳で英語→日本語に訳すリンクを作る
+  // （外部APIへの通信を使わないので、どの環境でも動きます）
+  function translateUrl(word) {
+    return 'https://translate.google.com/?sl=en&tl=ja&text=' + encodeURIComponent(word) + '&op=translate';
   }
 
-  function showTooltip(x, y, word, meaning) {
+  function showTooltip(x, y, word) {
     tooltip.innerHTML = '';
     const w = document.createElement('div');
     w.className = 'word';
     w.textContent = word;
-    const m = document.createElement('div');
-    m.className = 'meaning';
-    m.textContent = meaning;
+    const a = document.createElement('a');
+    a.className = 'meaning';
+    a.href = translateUrl(word);
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = '日本語の意味を見る →';
     tooltip.appendChild(w);
-    tooltip.appendChild(m);
+    tooltip.appendChild(a);
     tooltip.style.left = (x + window.scrollX) + 'px';
     tooltip.style.top = (y + window.scrollY + 24) + 'px';
     tooltip.style.display = 'block';
   }
 
-  document.addEventListener('mouseup', async (event) => {
+  document.addEventListener('mouseup', (event) => {
     if (tooltip.contains(event.target)) return;
 
-    const selection = window.getSelection();
-    const word = selection.toString().trim();
+    const word = window.getSelection().toString().trim();
 
-    // 英単語 1 つだけを対象にする（長すぎる選択は無視）
+    // 英単語 1 つだけを対象にする（長い選択や日本語は無視）
     if (!word || word.length > 40 || !/^[A-Za-z][A-Za-z'-]*$/.test(word)) {
       tooltip.style.display = 'none';
       return;
     }
-
-    showTooltip(event.pageX - window.scrollX, event.pageY - window.scrollY, word, '翻訳中…');
-
-    try {
-      const meaning = await translateToJapanese(word);
-      showTooltip(event.pageX - window.scrollX, event.pageY - window.scrollY, word, meaning);
-    } catch (e) {
-      showTooltip(event.pageX - window.scrollX, event.pageY - window.scrollY, word, '意味を取得できませんでした');
-    }
+    showTooltip(event.pageX - window.scrollX, event.pageY - window.scrollY, word);
   });
 
   document.addEventListener('mousedown', (event) => {
