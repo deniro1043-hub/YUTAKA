@@ -1,0 +1,63 @@
+name: kakure_kanji
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'kakure_kanji/**'
+      - '.github/workflows/kakure_kanji.yml'
+  pull_request:
+    paths:
+      - 'kakure_kanji/**'
+      - '.github/workflows/kakure_kanji.yml'
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.50.1'
+
+defaults:
+  run:
+    working-directory: kakure_kanji
+
+jobs:
+  analyze-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  build-windows:
+    needs: analyze-test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter build windows --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kakure_kanji-windows
+          path: kakure_kanji/build/windows/x64/runner/Release/
+
+  build-ios:
+    needs: analyze-test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      # 署名なしでビルドが通ることだけを確認する（配布用の署名は Phase7 で設定）
+      - run: flutter build ios --release --no-codesign

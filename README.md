@@ -18,3 +18,7 @@
 
 - 翻訳の精度は完璧ではありません。文脈によって意味が変わる単語は、辞書でも確認してください。
 - 文脈によって意味が変わる単語は、翻訳結果の例文も合わせて確認してください。
+
+## かくれ漢字（Flutter アプリ）
+
+`kakure_kanji/` に、漢字パズルアプリ「かくれ漢字」があります。詳しくは [`kakure_kanji/README.md`](kakure_kanji/README.md) と [`docs/SPEC.md`](docs/SPEC.md) を見てください。
