@@ -1,0 +1,594 @@
+{
+ "grade": 1,
+ "kanji": "一右雨円王音下火花貝学気九休玉金空月犬見五口校左三山子四糸字耳七車手十出女小上森人水正生青夕石赤千川先早草足村大男竹中虫町天田土二日入年白八百文木本名目立力林六",
+ "puzzles": [
+  {
+   "kanji": "一",
+   "strokeCount": 1,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       1
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "二",
+   "strokeCount": 2,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       1
+      ],
+      [
+       2
+      ]
+     ]
+    },
+    {
+     "name": "二",
+     "strokePatterns": [
+      [
+       1,
+       2
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "三",
+   "strokeCount": 3,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       1
+      ],
+      [
+       2
+      ],
+      [
+       3
+      ]
+     ]
+    },
+    {
+     "name": "二",
+     "strokePatterns": [
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       1,
+       3
+      ]
+     ]
+    },
+    {
+     "name": "三",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "十",
+   "strokeCount": 2,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       1
+      ]
+     ]
+    },
+    {
+     "name": "十",
+     "strokePatterns": [
+      [
+       1,
+       2
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "土",
+   "strokeCount": 3,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       1
+      ],
+      [
+       3
+      ]
+     ]
+    },
+    {
+     "name": "二",
+     "strokePatterns": [
+      [
+       1,
+       3
+      ]
+     ]
+    },
+    {
+     "name": "十",
+     "strokePatterns": [
+      [
+       1,
+       2
+      ]
+     ]
+    },
+    {
+     "name": "土",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "口",
+   "strokeCount": 3,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       3
+      ]
+     ]
+    },
+    {
+     "name": "口",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "日",
+   "strokeCount": 4,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       3
+      ],
+      [
+       4
+      ]
+     ]
+    },
+    {
+     "name": "二",
+     "strokePatterns": [
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    {
+     "name": "口",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       4
+      ]
+     ]
+    },
+    {
+     "name": "日",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3,
+       4
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "月",
+   "strokeCount": 4,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       3
+      ],
+      [
+       4
+      ]
+     ]
+    },
+    {
+     "name": "二",
+     "strokePatterns": [
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    {
+     "name": "月",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3,
+       4
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "目",
+   "strokeCount": 5,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       3
+      ],
+      [
+       4
+      ],
+      [
+       5
+      ]
+     ]
+    },
+    {
+     "name": "二",
+     "strokePatterns": [
+      [
+       3,
+       4
+      ],
+      [
+       4,
+       5
+      ],
+      [
+       3,
+       5
+      ]
+     ]
+    },
+    {
+     "name": "三",
+     "strokePatterns": [
+      [
+       3,
+       4,
+       5
+      ]
+     ]
+    },
+    {
+     "name": "目",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3,
+       4,
+       5
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "山",
+   "strokeCount": 3,
+   "parts": [
+    {
+     "name": "山",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "出",
+   "strokeCount": 5,
+   "parts": [
+    {
+     "name": "山",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3
+      ],
+      [
+       1,
+       4,
+       5
+      ]
+     ]
+    },
+    {
+     "name": "出",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3,
+       4,
+       5
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "木",
+   "strokeCount": 4,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       1
+      ]
+     ]
+    },
+    {
+     "name": "十",
+     "strokePatterns": [
+      [
+       1,
+       2
+      ]
+     ]
+    },
+    {
+     "name": "木",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3,
+       4
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "林",
+   "strokeCount": 8,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       1
+      ],
+      [
+       5
+      ]
+     ]
+    },
+    {
+     "name": "十",
+     "strokePatterns": [
+      [
+       1,
+       2
+      ],
+      [
+       5,
+       6
+      ]
+     ]
+    },
+    {
+     "name": "木",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3,
+       4
+      ],
+      [
+       5,
+       6,
+       7,
+       8
+      ]
+     ]
+    },
+    {
+     "name": "林",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "森",
+   "strokeCount": 12,
+   "parts": [
+    {
+     "name": "一",
+     "strokePatterns": [
+      [
+       1
+      ],
+      [
+       5
+      ],
+      [
+       9
+      ]
+     ]
+    },
+    {
+     "name": "十",
+     "strokePatterns": [
+      [
+       1,
+       2
+      ],
+      [
+       5,
+       6
+      ],
+      [
+       9,
+       10
+      ]
+     ]
+    },
+    {
+     "name": "木",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3,
+       4
+      ],
+      [
+       5,
+       6,
+       7,
+       8
+      ],
+      [
+       9,
+       10,
+       11,
+       12
+      ]
+     ]
+    },
+    {
+     "name": "林",
+     "strokePatterns": [
+      [
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ]
+     ]
+    },
+    {
+     "name": "森",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kanji": "水",
+   "strokeCount": 4,
+   "parts": [
+    {
+     "name": "小",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3
+      ]
+     ]
+    },
+    {
+     "name": "水",
+     "strokePatterns": [
+      [
+       1,
+       2,
+       3,
+       4
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

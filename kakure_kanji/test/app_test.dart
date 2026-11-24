@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,41 +6,98 @@ import 'package:kakure_kanji/features/glyph/kanji_stroke_view.dart';
 import 'package:kakure_kanji/main.dart';
 
 void main() {
-  testWidgets('ホームから木を開き、画をタップで選択・解除できる', (tester) async {
-    tester.view.physicalSize = const Size(800, 1200);
+  // テストごとに FakeAsync のゾーンが変わるため、前のテストで読み込んだ
+  // アセットのキャッシュ（Future）を持ち越さない。
+  setUp(rootBundle.clear);
+
+  Future<Offset Function(double, double)> openPuzzle(
+      WidgetTester tester, int code) async {
+    tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(const ProviderScope(child: KakureKanjiApp()));
     await tester.pumpAndSettle();
-
-    // ゲーム内の漢字は Text ではなく字形描画で表示する（仕様6.3）
-    expect(find.text('木'), findsNothing);
-    expect(find.byType(KanjiStrokeView), findsWidgets);
-
-    await tester.tap(find.byKey(const ValueKey('tile-26408')));
+    await tester.tap(find.byKey(ValueKey('tile-$code')));
     await tester.pumpAndSettle();
 
     final view = find.byKey(const ValueKey('puzzle-kanji'));
     expect(view, findsOneWidget);
     final topLeft = tester.getTopLeft(view);
     final scale = tester.getSize(view).width / 1024;
-    Offset at(double x, double y) => topLeft + Offset(x, y) * scale;
+    return (x, y) => topLeft + Offset(x, y) * scale;
+  }
+
+  String status(WidgetTester tester) =>
+      tester.widget<Text>(find.byKey(const ValueKey('status-label'))).data!;
+  String progress(WidgetTester tester) =>
+      tester.widget<Text>(find.byKey(const ValueKey('progress-label'))).data!;
+
+  testWidgets('ホームの漢字は字形で描き、Text では表示しない（仕様6.3）', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: KakureKanjiApp()));
+    await tester.pumpAndSettle();
+    expect(find.text('木'), findsNothing);
+    expect(find.byType(KanjiStrokeView), findsWidgets);
+  });
+
+  testWidgets('木: 画の選択・解除ができる', (tester) async {
+    final at = await openPuzzle(tester, 26408);
 
     await tester.tapAt(at(498, 800)); // 縦画（2画目）
     await tester.pump();
-    expect(find.text('えらんだ画: 2'), findsOneWidget);
+    expect(status(tester), 'えらんだ画: 2');
 
     await tester.tapAt(at(300, 372)); // 横画（1画目）
     await tester.pump();
-    expect(find.text('えらんだ画: 1, 2'), findsOneWidget);
+    expect(status(tester), 'えらんだ画: 1, 2');
 
     await tester.tapAt(at(498, 800)); // もう一度で解除
     await tester.pump();
-    expect(find.text('えらんだ画: 1'), findsOneWidget);
+    expect(status(tester), 'えらんだ画: 1');
 
     await tester.tap(find.text('えらびなおす'));
     await tester.pump();
-    expect(find.textContaining('4画'), findsOneWidget);
+    expect(status(tester), contains('4画'));
+  });
+
+  testWidgets('木: 十を見つける → 発見演出 → 発見リストに入る', (tester) async {
+    final at = await openPuzzle(tester, 26408);
+    expect(progress(tester), 'みつけた かず: 0 / 3');
+
+    await tester.tapAt(at(300, 372)); // 1画目
+    await tester.tapAt(at(498, 800)); // 2画目
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('check-button')));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(const ValueKey('discovery-badge')), findsOneWidget);
+    expect(find.text('みつけた！'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('discovery-badge')), findsNothing);
+
+    expect(progress(tester), 'みつけた かず: 1 / 3');
+    expect(find.byKey(const ValueKey('found-21313')), findsOneWidget); // 十
+    expect(status(tester), contains('4画')); // 選択はリセット
+
+    // 同じ組み合わせをもう一度
+    await tester.tapAt(at(300, 372));
+    await tester.tapAt(at(498, 800));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('check-button')));
+    await tester.pump();
+    expect(status(tester), 'それは もう みつけたよ');
+    expect(progress(tester), 'みつけた かず: 1 / 3');
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+  });
+
+  testWidgets('木: 部品にならない組み合わせは不正解', (tester) async {
+    final at = await openPuzzle(tester, 26408);
+    await tester.tapAt(at(498, 800)); // 縦画だけ
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('check-button')));
+    await tester.pump();
+    expect(status(tester), contains('ちがうみたい'));
+    expect(progress(tester), 'みつけた かず: 0 / 3');
+    await tester.pumpAndSettle(const Duration(seconds: 3));
   });
 }
