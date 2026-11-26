@@ -10,6 +10,12 @@
 - [ ] Phase3：ゲームループ・図鑑・クリア判定
 - [ ] Phase4〜7：コイン・ヒント・メダル・キャラクター・課金・リリース
 
+## スマホのブラウザで試す
+
+https://deniro1043-hub.github.io/YUTAKA/ を Safari / Chrome で開く。
+main にマージするたびに自動で更新される（`.github/workflows/kakure_kanji_web.yml`）。
+Web 版は確認用で、正式な配布先は iOS / Windows。
+
 ## 動かし方
 
 ```bash
