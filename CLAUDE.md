@@ -33,6 +33,9 @@
 - ロジック（判定・データ変換）には単体テストを、画面にはウィジェットテストを付ける。
 - iOS / Windows のビルド確認は GitHub Actions（`.github/workflows/kakure_kanji.yml`）で行う。
   iOS ビルドは main へのマージ時と手動実行時だけ動く（PR では動かない）。
+- スマホ確認用の Web 版を GitHub Pages（https://deniro1043-hub.github.io/YUTAKA/）に自動公開している
+  （`.github/workflows/kakure_kanji_web.yml`）。Web 版は確認用で、正式な配布先は iOS / Windows のまま。
+  Web でも動かないコード（dart:io など）を lib/ に入れない。
 
 ## コード構成（kakure_kanji/lib）
 

@@ -1,0 +1,59 @@
+name: kakure_kanji_web
+
+# スマホのブラウザで試すための Web 版（確認用。正式な配布先は iOS / Windows）。
+# main に入ると GitHub Pages に公開し、PR ではビルドできるかだけを確認する。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'kakure_kanji/**'
+      - '.github/workflows/kakure_kanji_web.yml'
+  pull_request:
+    paths:
+      - 'kakure_kanji/**'
+      - '.github/workflows/kakure_kanji_web.yml'
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.50.1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kakure-kanji-web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kakure_kanji
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      # 公開先は https://<owner>.github.io/<リポジトリ名>/ なので、その下で動くようにする
+      - run: flutter build web --release --base-href /${{ github.event.repository.name }}/
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: kakure_kanji/build/web
+
+  deploy-pages:
+    if: github.event_name != 'pull_request'
+    needs: build-web
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
