@@ -16,8 +16,10 @@ void main() {
       final glyph = loadTestGlyph(entry.key);
       expect(glyph.character, entry.key);
       expect(glyph.strokeCount, entry.value, reason: entry.key);
-      expect(glyph.strokes.map((s) => s.id),
-          List.generate(entry.value, (i) => i + 1));
+      expect(
+        glyph.strokes.map((s) => s.id),
+        List.generate(entry.value, (i) => i + 1),
+      );
       for (final s in glyph.strokes) {
         expect(s.medianPoints, isNotEmpty, reason: '${entry.key} ${s.id}');
       }
@@ -25,9 +27,13 @@ void main() {
   });
 
   test('不正な SVG は例外になる', () {
-    expect(() => parseAnimCjkSvg('<svg id="x"></svg>'),
-        throwsA(isA<AnimCjkParseException>()));
-    expect(() => parseAnimCjkSvg('<svg id="z26408"></svg>'),
-        throwsA(isA<AnimCjkParseException>()));
+    expect(
+      () => parseAnimCjkSvg('<svg id="x"></svg>'),
+      throwsA(isA<AnimCjkParseException>()),
+    );
+    expect(
+      () => parseAnimCjkSvg('<svg id="z26408"></svg>'),
+      throwsA(isA<AnimCjkParseException>()),
+    );
   });
 }

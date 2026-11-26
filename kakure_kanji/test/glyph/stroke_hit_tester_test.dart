@@ -38,4 +38,17 @@ void main() {
     );
     expect(painter.paintOrder, [2, 4, 1, 3]);
   });
+
+  test('発見演出の画は選択中の画よりさらに前面に描く', () {
+    final painter = KanjiStrokePainter(
+      glyph: ki,
+      selectedStrokeIds: const {1, 3},
+      highlightStrokeIds: const {2, 3},
+      strokeColor: const Color(0xFF000000),
+      selectedColor: const Color(0xFFFF0000),
+      showGrid: false,
+      gridColor: const Color(0x00000000),
+    );
+    expect(painter.paintOrder, [4, 1, 2, 3]);
+  });
 }

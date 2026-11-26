@@ -9,11 +9,14 @@ import 'stroke_hit_tester.dart';
 ///
 /// 仕様書 6.3: ゲーム内の漢字は Text ではなく必ずこのウィジェットで描く。
 /// 仕様書 6.4: 未選択の画を先に、選択中の画を最後（最前面）に描く。
+/// 発見演出で光らせる画（[highlightStrokeIds]）は、さらにその上に描く。
 class KanjiStrokeView extends StatelessWidget {
   const KanjiStrokeView({
     super.key,
     required this.glyph,
     this.selectedStrokeIds = const {},
+    this.highlightStrokeIds = const {},
+    this.highlightColor = const Color(0xFF2EAD4B),
     this.onStrokeTap,
     this.strokeColor = const Color(0xFF3A3A3A),
     this.selectedColor = const Color(0xFFFF8A00),
@@ -23,6 +26,10 @@ class KanjiStrokeView extends StatelessWidget {
 
   final KanjiGlyph glyph;
   final Set<int> selectedStrokeIds;
+
+  /// 発見演出などで一時的に光らせる画。
+  final Set<int> highlightStrokeIds;
+  final Color highlightColor;
 
   /// null のときはタップに反応しない（一覧表示などに使う）。
   final ValueChanged<int>? onStrokeTap;
@@ -43,6 +50,8 @@ class KanjiStrokeView extends StatelessWidget {
             painter: KanjiStrokePainter(
               glyph: glyph,
               selectedStrokeIds: selectedStrokeIds,
+              highlightStrokeIds: highlightStrokeIds,
+              highlightColor: highlightColor,
               strokeColor: strokeColor,
               selectedColor: selectedColor,
               showGrid: showGrid,
@@ -80,6 +89,8 @@ class KanjiStrokePainter extends CustomPainter {
   KanjiStrokePainter({
     required this.glyph,
     required this.selectedStrokeIds,
+    this.highlightStrokeIds = const {},
+    this.highlightColor = const Color(0xFF2EAD4B),
     required this.strokeColor,
     required this.selectedColor,
     required this.showGrid,
@@ -88,17 +99,32 @@ class KanjiStrokePainter extends CustomPainter {
 
   final KanjiGlyph glyph;
   final Set<int> selectedStrokeIds;
+  final Set<int> highlightStrokeIds;
+  final Color highlightColor;
   final Color strokeColor;
   final Color selectedColor;
   final bool showGrid;
   final Color gridColor;
 
-  /// 描画順（未選択 → 選択）。テストで仕様 6.4 を確認するため公開している。
+  int _layer(int id) => highlightStrokeIds.contains(id)
+      ? 2
+      : selectedStrokeIds.contains(id)
+          ? 1
+          : 0;
+
+  /// その画を塗る色。選択を解除した画は、選択前と同じ [strokeColor] に戻る
+  /// （グレーなどの「解除済み」色は使わない）。
+  Color colorFor(int id) => switch (_layer(id)) {
+        2 => highlightColor,
+        1 => selectedColor,
+        _ => strokeColor,
+      };
+
+  /// 描画順（未選択 → 選択 → 発見演出）。テストで仕様 6.4 を確認するため公開している。
   List<int> get paintOrder => [
-        for (final s in glyph.strokes)
-          if (!selectedStrokeIds.contains(s.id)) s.id,
-        for (final s in glyph.strokes)
-          if (selectedStrokeIds.contains(s.id)) s.id,
+        for (final layer in const [0, 1, 2])
+          for (final s in glyph.strokes)
+            if (_layer(s.id) == layer) s.id,
       ];
 
   @override
@@ -113,10 +139,9 @@ class KanjiStrokePainter extends CustomPainter {
 
     if (showGrid) _paintGrid(canvas, scale);
 
-    final normal = Paint()..color = strokeColor;
-    final selected = Paint()..color = selectedColor;
+    final paint = Paint();
     for (final id in paintOrder) {
-      final paint = selectedStrokeIds.contains(id) ? selected : normal;
+      paint.color = colorFor(id);
       canvas.drawPath(glyph.strokeById(id).outline, paint);
     }
     canvas.restore();
@@ -137,6 +162,8 @@ class KanjiStrokePainter extends CustomPainter {
   bool shouldRepaint(KanjiStrokePainter old) =>
       old.glyph != glyph ||
       !_setEquals(old.selectedStrokeIds, selectedStrokeIds) ||
+      !_setEquals(old.highlightStrokeIds, highlightStrokeIds) ||
+      old.highlightColor != highlightColor ||
       old.strokeColor != strokeColor ||
       old.selectedColor != selectedColor ||
       old.showGrid != showGrid ||
