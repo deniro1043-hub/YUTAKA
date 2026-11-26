@@ -49,8 +49,11 @@ jobs:
           name: kakure_kanji-windows
           path: kakure_kanji/build/windows/x64/runner/Release/
 
+  # GitHub の Mac 環境は混雑で受け付けられないことがあるため、PR では動かさず
+  # main へのマージ時と手動実行時だけビルドを確認する（2026-11-26 決定）。
   build-ios:
     needs: analyze-test
+    if: github.event_name != 'pull_request'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
