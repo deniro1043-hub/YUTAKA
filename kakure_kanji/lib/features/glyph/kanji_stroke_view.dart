@@ -112,6 +112,14 @@ class KanjiStrokePainter extends CustomPainter {
           ? 1
           : 0;
 
+  /// その画を塗る色。選択を解除した画は、選択前と同じ [strokeColor] に戻る
+  /// （グレーなどの「解除済み」色は使わない）。
+  Color colorFor(int id) => switch (_layer(id)) {
+        2 => highlightColor,
+        1 => selectedColor,
+        _ => strokeColor,
+      };
+
   /// 描画順（未選択 → 選択 → 発見演出）。テストで仕様 6.4 を確認するため公開している。
   List<int> get paintOrder => [
         for (final layer in const [0, 1, 2])
@@ -131,13 +139,10 @@ class KanjiStrokePainter extends CustomPainter {
 
     if (showGrid) _paintGrid(canvas, scale);
 
-    final paints = [
-      Paint()..color = strokeColor,
-      Paint()..color = selectedColor,
-      Paint()..color = highlightColor,
-    ];
+    final paint = Paint();
     for (final id in paintOrder) {
-      canvas.drawPath(glyph.strokeById(id).outline, paints[_layer(id)]);
+      paint.color = colorFor(id);
+      canvas.drawPath(glyph.strokeById(id).outline, paint);
     }
     canvas.restore();
   }

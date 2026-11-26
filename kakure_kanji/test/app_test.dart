@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kakure_kanji/features/glyph/kanji_stroke_view.dart';
 import 'package:kakure_kanji/main.dart';
 
+import 'glyph/test_glyphs.dart';
+
 void main() {
   // テストごとに FakeAsync のゾーンが変わるため、前のテストで読み込んだ
   // アセットのキャッシュ（Future）を持ち越さない。
@@ -99,5 +101,56 @@ void main() {
     expect(status(tester), contains('ちがうみたい'));
     expect(progress(tester), 'みつけた かず: 0 / 3');
     await tester.pumpAndSettle(const Duration(seconds: 3));
+  });
+
+  testWidgets('林: 正解したら選択は自動で解除され、画は元の黒に戻る', (tester) async {
+    final at = await openPuzzle(tester, 26519);
+    KanjiStrokeView view() =>
+        tester.widget(find.byKey(const ValueKey('puzzle-kanji')));
+
+    final p1 = loadTestGlyph('林').strokeById(1).medianPoints;
+    final s1 = p1[p1.length ~/ 2];
+    final normal = view().strokeColor;
+    await tester.tapAt(at(s1.dx, s1.dy)); // 1画目（左の木の横画）
+    await tester.pump();
+    expect(status(tester), 'えらんだ画: 1');
+    expect(view().selectedStrokeIds, {1});
+
+    await tester.tap(find.byKey(const ValueKey('check-button')));
+    await tester.pump();
+    // 正解（一）→ もう一度タップしなくても選択は解除されている
+    expect(progress(tester), startsWith('みつけた かず: 1 /'));
+    expect(view().selectedStrokeIds, isEmpty);
+
+    await tester.pumpAndSettle();
+    // 発見演出のあとは、1画目も他の画と同じ色（選択前の黒）
+    expect(view().highlightStrokeIds, isEmpty);
+    final painter = KanjiStrokePainter(
+      glyph: view().glyph,
+      selectedStrokeIds: view().selectedStrokeIds,
+      highlightStrokeIds: view().highlightStrokeIds,
+      strokeColor: normal,
+      selectedColor: view().selectedColor,
+      showGrid: false,
+      gridColor: view().gridColor,
+    );
+    for (final s in view().glyph.strokes) {
+      expect(painter.colorFor(s.id), normal, reason: '${s.id}画目');
+    }
+  });
+
+  testWidgets('選択を手で解除した画も、選択前の黒に戻る', (tester) async {
+    final at = await openPuzzle(tester, 26519);
+    KanjiStrokeView view() =>
+        tester.widget(find.byKey(const ValueKey('puzzle-kanji')));
+    final p1 = loadTestGlyph('林').strokeById(1).medianPoints;
+    final s1 = p1[p1.length ~/ 2];
+    await tester.tapAt(at(s1.dx, s1.dy));
+    await tester.pump();
+    expect(view().selectedStrokeIds, {1});
+    await tester.tapAt(at(s1.dx, s1.dy));
+    await tester.pump();
+    expect(view().selectedStrokeIds, isEmpty);
+    expect(view().highlightStrokeIds, isEmpty);
   });
 }
