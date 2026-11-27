@@ -20,6 +20,6 @@ class FoundPartsNotifier extends Notifier<List<String>> {
 }
 
 final foundPartsProvider =
-    NotifierProvider.family<FoundPartsNotifier, List<String>, String>(
+    NotifierProvider.autoDispose.family<FoundPartsNotifier, List<String>, String>(
   FoundPartsNotifier.new,
 );

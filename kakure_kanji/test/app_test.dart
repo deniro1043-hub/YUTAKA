@@ -3,6 +3,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kakure_kanji/features/glyph/kanji_stroke_view.dart';
+import 'package:kakure_kanji/features/progress/progress_provider.dart';
+import 'package:kakure_kanji/features/progress/progress_store.dart';
 import 'package:kakure_kanji/main.dart';
 
 import 'glyph/test_glyphs.dart';
@@ -12,16 +14,33 @@ void main() {
   // アセットのキャッシュ（Future）を持ち越さない。
   setUp(rootBundle.clear);
 
+  late MemoryProgressStore store;
+  setUp(() => store = MemoryProgressStore());
+
+  Widget app() => ProviderScope(
+        overrides: [progressStoreProvider.overrideWith((ref) async => store)],
+        child: const KakureKanjiApp(),
+      );
+
+  /// ホーム → スタート → 1ねんせい → ステージ（[code] の字）と進む。
+  Future<void> goToStage(WidgetTester tester, int code) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('menu-start')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('grade-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(ValueKey('stage-$code')));
+    await tester.pumpAndSettle();
+  }
+
   Future<Offset Function(double, double)> openPuzzle(
       WidgetTester tester, int code) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(const ProviderScope(child: KakureKanjiApp()));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(ValueKey('tile-$code')));
-    await tester.pumpAndSettle();
+    await goToStage(tester, code);
 
     final view = find.byKey(const ValueKey('puzzle-kanji'));
     expect(view, findsOneWidget);
@@ -35,8 +54,12 @@ void main() {
   String progress(WidgetTester tester) =>
       tester.widget<Text>(find.byKey(const ValueKey('progress-label'))).data!;
 
-  testWidgets('ホームの漢字は字形で描き、Text では表示しない（仕様6.3）', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: KakureKanjiApp()));
+  testWidgets('ステージ選択の漢字は字形で描き、Text では表示しない（仕様6.3）', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('menu-start')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('grade-1')));
     await tester.pumpAndSettle();
     expect(find.text('木'), findsNothing);
     expect(find.byType(KanjiStrokeView), findsWidgets);
@@ -152,5 +175,74 @@ void main() {
     await tester.pump();
     expect(view().selectedStrokeIds, isEmpty);
     expect(view().highlightStrokeIds, isEmpty);
+  });
+
+  Future<void> clearIchi(WidgetTester tester, Offset Function(double, double) at) async {
+    final pts = loadTestGlyph('一').strokeById(1).medianPoints;
+    final mid = pts[pts.length ~/ 2];
+    await tester.tapAt(at(mid.dx, mid.dy));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('check-button')));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('全部の部品を見つけるとクリア → 記録され、ステージと図鑑に反映', (tester) async {
+    final at = await openPuzzle(tester, 19968); // 一（部品は「一」だけ）
+    await clearIchi(tester, at);
+
+    expect(find.byKey(const ValueKey('result-dialog')), findsOneWidget);
+    expect(find.text('クリア！'), findsOneWidget);
+    expect(find.text('ずかんに とうろく したよ！'), findsOneWidget);
+    final saved = await store.loadAll();
+    expect(saved.single.kanji, '一');
+    expect(saved.single.clearCount, 1);
+
+    await tester.tap(find.text('ステージに もどる'));
+    await tester.pumpAndSettle();
+    expect(find.text('クリア 1 / 15'), findsOneWidget);
+
+    // 図鑑：一 は字が見え、まだの字は「？」
+    tester.state<NavigatorState>(find.byType(Navigator).first);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('menu-dictionary')));
+    await tester.pumpAndSettle();
+    expect(find.text('あつめた かず: 1 / 80'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('dict-19968')),
+        matching: find.byType(KanjiStrokeView),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('dict-26408')), // 木（まだ）
+        matching: find.text('？'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('クリア済みの字をもう一度クリアすると回数が増える', (tester) async {
+    store = MemoryProgressStore([
+      ClearRecord(kanji: '一', firstClearedAt: DateTime(2026), clearCount: 1),
+    ]);
+    final at = await openPuzzle(tester, 19968);
+    await clearIchi(tester, at);
+    expect(find.text('もういちど クリアしたよ！'), findsOneWidget);
+    expect((await store.loadAll()).single.clearCount, 2);
+  });
+
+  testWidgets('「つぎの もじ」で同じ学年の次のステージへ進む', (tester) async {
+    final at = await openPuzzle(tester, 19968);
+    await clearIchi(tester, at);
+    await tester.tap(find.byKey(const ValueKey('next-stage')));
+    await tester.pumpAndSettle();
+    // 1年の配当漢字の並びで「一」の次に問題データがあるのは「月」（4画）
+    expect(status(tester), contains('4画'));
+    expect(progress(tester), 'みつけた かず: 0 / 3');
   });
 }

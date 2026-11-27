@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kakure_kanji/features/glyph/animcjk_parser.dart';
-import 'package:kakure_kanji/features/home/home_screen.dart';
 
 import 'test_glyphs.dart';
 
@@ -11,7 +10,6 @@ void main() {
   };
 
   test('同梱サンプルがすべて読み込め、画数が正しい', () {
-    expect(kSampleKanji.toSet(), expectedStrokeCounts.keys.toSet());
     for (final entry in expectedStrokeCounts.entries) {
       final glyph = loadTestGlyph(entry.key);
       expect(glyph.character, entry.key);

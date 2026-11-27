@@ -20,6 +20,32 @@ class PuzzleCatalog {
       for (final k in g.kanji) k: g.grade,
   };
 
+  GradeData? grade(int grade) {
+    for (final g in grades) {
+      if (g.grade == grade) return g;
+    }
+    return null;
+  }
+
+  /// 学年のステージ（1ステージ = 1文字。2026-11-27 決定）。
+  /// 配当漢字の並び順で、問題データのある字だけを返す。
+  List<PuzzleData> stagesFor(int gradeNumber) {
+    final g = grade(gradeNumber);
+    if (g == null) return const [];
+    final byKanji = {for (final p in g.puzzles) p.kanji: p};
+    return [
+      for (final k in g.kanji)
+        if (byKanji[k] != null) byKanji[k]!,
+    ];
+  }
+
+  /// 同じ学年で [puzzle] の次のステージの字。最後なら null。
+  String? nextStage(PuzzleData puzzle) {
+    final stages = stagesFor(puzzle.grade);
+    final i = stages.indexWhere((p) => p.kanji == puzzle.kanji);
+    return i >= 0 && i + 1 < stages.length ? stages[i + 1].kanji : null;
+  }
+
   PuzzleData? puzzleFor(String kanji) {
     for (final g in grades) {
       for (final p in g.puzzles) {

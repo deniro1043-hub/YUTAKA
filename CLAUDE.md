@@ -65,6 +65,10 @@
 - `features/judge/` … 判定データ（grade_N.json）の読み込みと部品判定エンジン
 - `features/puzzle/` … 問題画面、画の選択状態、見つけた部品（Riverpod）
 - `features/home/` … ホーム画面
+- `features/stage/` … 学年選択・ステージ選択（1ステージ = 1文字）
+- `features/dictionary/` … 図鑑（クリアした漢字が載る）
+- `features/progress/` … クリア記録の保存。iOS / Windows は Isar、Web 版だけブラウザ保存
+  （Isar 3 は Web のビルドが通らないため。`progress_provider.dart` の条件付き import で切り替え）
 - 新しい機能は `features/<機能名>/` に追加する。
 
 ## メモ
@@ -74,4 +78,8 @@
   部品漢字の SVG も必要（発見リストに描くため）。
 - 判定データは `assets/json/grade_N.json`。形式は `lib/features/judge/puzzle_data.dart` のコメント参照。
   `test/judge/grade_data_test.dart` が仕様ルール（11.1〜11.5、17）を自動検査する。
+- Isar のモデルを変えたら `dart run build_runner build --delete-conflicting-outputs` で
+  `*.g.dart` を作り直してコミットする。
+- ゲームの決まり（2026-11-27 決定）：部品漢字を全部見つけたらその字はクリア／図鑑にはクリアした字が載る／
+  1ステージ = 1文字。
 - ウィジェットテストでは `setUp(rootBundle.clear)` を入れる（テスト間でアセット読み込みが固まるのを防ぐ）。
