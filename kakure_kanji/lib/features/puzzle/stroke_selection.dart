@@ -20,6 +20,6 @@ class StrokeSelectionNotifier extends Notifier<Set<int>> {
 }
 
 final strokeSelectionProvider =
-    NotifierProvider.family<StrokeSelectionNotifier, Set<int>, String>(
+    NotifierProvider.autoDispose.family<StrokeSelectionNotifier, Set<int>, String>(
   StrokeSelectionNotifier.new,
 );

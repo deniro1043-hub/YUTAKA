@@ -19,6 +19,12 @@
    ホーム画面から順番に1つずつ書く。可能なら目的の画面を直接開くリンクも付ける。
 5. GitHub アプリでできない操作（Settings の Pages など）は、そのことと、ブラウザでの開き方を先に伝える。
 6. **ユーザーが「禁止」と言ったことは二度としない。** 新しく禁止されたことは、このリストに追記する。
+7. **「待ってね」「終わったら知らせる」と言うときは、だいたいの所要時間を必ず添える。**
+   目安（2026-11 の実測。GitHub が混んでいると延びる）:
+   - PR を出したあとの自動チェック（テスト・Windows・Web のビルド）：約3〜5分
+   - マージしてからスマホ用 Web 版が新しくなるまで：約2〜4分
+   - iOS ビルド（main へのマージ時のみ）：約5分。Mac 環境が混んでいると15分以上待って中止されることがある
+   - 私（Claude）が1つの Phase を作って PR を出すまで：内容によるので、着手時に見込みを伝える
 
 ## 仕様
 
@@ -59,6 +65,10 @@
 - `features/judge/` … 判定データ（grade_N.json）の読み込みと部品判定エンジン
 - `features/puzzle/` … 問題画面、画の選択状態、見つけた部品（Riverpod）
 - `features/home/` … ホーム画面
+- `features/stage/` … 学年選択・ステージ選択（1ステージ = 1文字）
+- `features/dictionary/` … 図鑑（クリアした漢字が載る）
+- `features/progress/` … クリア記録の保存。iOS / Windows は Isar、Web 版だけブラウザ保存
+  （Isar 3 は Web のビルドが通らないため。`progress_provider.dart` の条件付き import で切り替え）
 - 新しい機能は `features/<機能名>/` に追加する。
 
 ## メモ
@@ -68,4 +78,8 @@
   部品漢字の SVG も必要（発見リストに描くため）。
 - 判定データは `assets/json/grade_N.json`。形式は `lib/features/judge/puzzle_data.dart` のコメント参照。
   `test/judge/grade_data_test.dart` が仕様ルール（11.1〜11.5、17）を自動検査する。
+- Isar のモデルを変えたら `dart run build_runner build --delete-conflicting-outputs` で
+  `*.g.dart` を作り直してコミットする。
+- ゲームの決まり（2026-11-27 決定）：部品漢字を全部見つけたらその字はクリア／図鑑にはクリアした字が載る／
+  1ステージ = 1文字。
 - ウィジェットテストでは `setUp(rootBundle.clear)` を入れる（テスト間でアセット読み込みが固まるのを防ぐ）。

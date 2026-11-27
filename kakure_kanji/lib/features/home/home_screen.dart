@@ -1,17 +1,9 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../glyph/glyph_repository.dart';
-import '../glyph/kanji_stroke_view.dart';
-
-/// Phase1 で同梱しているサンプル字形。本編の収録データは Phase3 で差し替える。
-const kSampleKanji = [
-  '一', '二', '三', '十', '土', '口', '日', '月', //
-  '目', '山', '出', '木', '林', '森', '水',
-];
-
-/// ホーム画面（Phase1: 字形の確認用に、問題漢字の一覧だけを置く）。
+/// ホーム画面（仕様 24.1）。
+///
+/// メダル・キャラクター・設定は Phase5 以降で作るので、今は「じゅんびちゅう」。
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -31,41 +23,84 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: GridView.extent(
-        maxCrossAxisExtent: 120,
-        padding: const EdgeInsets.all(16),
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        children: [
-          for (final c in kSampleKanji) _KanjiTile(character: c),
-        ],
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                _MenuButton(
+                  key: const ValueKey('menu-start'),
+                  icon: Icons.play_arrow_rounded,
+                  label: 'スタート',
+                  primary: true,
+                  onPressed: () => context.push('/grades'),
+                ),
+                _MenuButton(
+                  key: const ValueKey('menu-dictionary'),
+                  icon: Icons.menu_book_rounded,
+                  label: 'ずかん',
+                  onPressed: () => context.push('/dictionary'),
+                ),
+                const _MenuButton(
+                  icon: Icons.military_tech_rounded,
+                  label: 'メダル（じゅんびちゅう）',
+                ),
+                const _MenuButton(
+                  icon: Icons.pets_rounded,
+                  label: 'キャラクター（じゅんびちゅう）',
+                ),
+                const _MenuButton(
+                  icon: Icons.settings_rounded,
+                  label: 'せってい（じゅんびちゅう）',
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-class _KanjiTile extends ConsumerWidget {
-  const _KanjiTile({required this.character});
+class _MenuButton extends StatelessWidget {
+  const _MenuButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.onPressed,
+    this.primary = false,
+  });
 
-  final String character;
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool primary;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final glyph = ref.watch(glyphProvider(character));
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        key: ValueKey('tile-${character.runes.first}'),
-        onTap: () => context.push('/puzzle/${character.runes.first}'),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: glyph.when(
-            loading: () => const SizedBox.shrink(),
-            error: (_, _) => const Icon(Icons.error_outline),
-            data: (g) => KanjiStrokeView(glyph: g),
-          ),
-        ),
+  Widget build(BuildContext context) {
+    final style = ButtonStyle(
+      minimumSize: const WidgetStatePropertyAll(Size.fromHeight(64)),
+      textStyle: const WidgetStatePropertyAll(TextStyle(fontSize: 20)),
+      alignment: Alignment.centerLeft,
+      padding: const WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 24),
       ),
+    );
+    final child = Row(
+      children: [
+        Icon(icon),
+        const SizedBox(width: 16),
+        // 画面が狭いときは折り返す（はみ出さない）
+        Expanded(child: Text(label, softWrap: true)),
+      ],
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: primary
+          ? FilledButton(onPressed: onPressed, style: style, child: child)
+          : OutlinedButton(onPressed: onPressed, style: style, child: child),
     );
   }
 }

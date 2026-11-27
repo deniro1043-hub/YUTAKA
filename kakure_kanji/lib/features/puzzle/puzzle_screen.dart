@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../glyph/glyph_repository.dart';
@@ -9,13 +10,14 @@ import '../glyph/kanji_stroke_view.dart';
 import '../judge/part_judge.dart';
 import '../judge/puzzle_data.dart';
 import '../judge/puzzle_repository.dart';
+import '../progress/progress_provider.dart';
 import 'found_parts.dart';
 import 'stroke_selection.dart';
 
 /// 発見演出の長さ。
 const kDiscoveryDuration = Duration(milliseconds: 1400);
 
-/// 問題画面（Phase2: 画の選択 → 部品判定 → 発見演出 → 発見リスト）。
+/// 問題画面（画の選択 → 部品判定 → 発見演出 → 発見リスト → 全部見つけたらクリア）。
 class PuzzleScreen extends ConsumerWidget {
   const PuzzleScreen({super.key, required this.character});
 
@@ -41,6 +43,7 @@ class PuzzleScreen extends ConsumerWidget {
               glyph: glyph.value!,
               puzzle: puzzle,
               judge: catalog.value!.judgeFor(puzzle),
+              nextKanji: catalog.value!.nextStage(puzzle),
             );
     }
     return Scaffold(appBar: AppBar(title: const Text('もんだい')), body: body);
@@ -52,11 +55,15 @@ class _PuzzleBody extends ConsumerStatefulWidget {
     required this.glyph,
     required this.puzzle,
     required this.judge,
+    required this.nextKanji,
   });
 
   final KanjiGlyph glyph;
   final PuzzleData puzzle;
   final PartJudge judge;
+
+  /// 同じ学年の次のステージ（なければ null）。
+  final String? nextKanji;
 
   @override
   ConsumerState<_PuzzleBody> createState() => _PuzzleBodyState();
@@ -89,6 +96,23 @@ class _PuzzleBodyState extends ConsumerState<_PuzzleBody>
     });
   }
 
+  /// 部品を全部見つけたらクリア（2026-11-27 決定）。記録して結果を表示する。
+  Future<void> _onCleared() async {
+    final firstTime =
+        await ref.read(progressProvider.notifier).markCleared(_character);
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => ResultDialog(
+        character: _character,
+        firstTime: firstTime,
+        nextKanji: widget.nextKanji,
+        grade: widget.puzzle.grade,
+      ),
+    );
+  }
+
   void _check() {
     final selection = ref.read(strokeSelectionProvider(_character).notifier);
     final found = ref.read(foundPartsProvider(_character));
@@ -104,7 +128,10 @@ class _PuzzleBodyState extends ConsumerState<_PuzzleBody>
           _lastFound = result;
           _message = null;
         });
-        _discovery.forward(from: 0);
+        final cleared = found.length + 1 >= widget.judge.totalParts;
+        _discovery.forward(from: 0).whenComplete(() {
+          if (cleared && mounted) _onCleared();
+        });
       case PartAlreadyFound():
         selection.clear();
         _showMessage('それは もう みつけたよ');
@@ -316,4 +343,87 @@ class _FoundList extends ConsumerWidget {
         ),
         child: child,
       );
+}
+
+/// クリア時の結果表示（仕様 24 / 25: ResultDialog）。
+class ResultDialog extends ConsumerWidget {
+  const ResultDialog({
+    super.key,
+    required this.character,
+    required this.firstTime,
+    required this.nextKanji,
+    required this.grade,
+  });
+
+  final String character;
+  final bool firstTime;
+  final String? nextKanji;
+  final int grade;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final glyph = ref.watch(glyphProvider(character)).value;
+    final next = nextKanji;
+    // AlertDialog は中身の幅を測ろうとして字形描画（LayoutBuilder）と相性が悪いため、
+    // 大きさを固定した Dialog で作る。
+    return Dialog(
+      key: const ValueKey('result-dialog'),
+      child: SizedBox(
+        width: 300,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'クリア！',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF2EAD4B),
+                    ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: glyph == null
+                    ? null
+                    : KanjiStrokeView(
+                        glyph: glyph,
+                        strokeColor: const Color(0xFF2EAD4B),
+                      ),
+              ),
+              const SizedBox(height: 12),
+              Text(firstTime ? 'ずかんに とうろく したよ！' : 'もういちど クリアしたよ！'),
+              const SizedBox(height: 20),
+              if (next != null) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    key: const ValueKey('next-stage'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      context.go('/grades/$grade/${next.runes.first}');
+                    },
+                    child: const Text('つぎの もじ'),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.go('/grades/$grade');
+                  },
+                  child: const Text('ステージに もどる'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
